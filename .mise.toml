@@ -1,0 +1,73 @@
+[env]
+UV_CACHE_DIR = ".uv-cache"
+ENVIRONMENT = "development"
+
+[tools]
+python = "3.13"
+uv = "latest"
+
+# =========================================
+# Project Setup
+# =========================================
+
+[tasks.install]
+description = "Install production dependencies"
+run = "uv sync --no-dev"
+
+[tasks.install-dev]
+description = "Install all dependencies including development tools"
+run = "uv sync --all-extras"
+
+[tasks.setup-dev]
+description = "Complete development environment setup"
+depends = ["install-dev"]
+run = """
+uv run pre-commit install
+echo "✅ Development environment ready!"
+echo "Run 'mise run dev' to start the development server"
+"""
+
+# =========================================
+# Cleaning
+# =========================================
+
+[tasks.clean]
+description = "Clean up build artifacts and cache"
+run = """
+rm -rf build/ dist/ *.egg-info/ htmlcov/ .coverage .pytest_cache/ .mypy_cache/ .ruff_cache/
+find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+find . -name "*.pyc" -delete 2>/dev/null || true
+find . -name "*.pyo" -delete 2>/dev/null || true
+"""
+
+# =========================================
+# Development Server
+# =========================================
+
+[tasks.start]
+description = "Run MCP server"
+run = "uv run --no-dev python hello_server.py"
+
+# =========================================
+# Docker Commands
+# =========================================
+
+[tasks.docker-build]
+description = "Build production Docker image"
+run = "docker build -t hello-mcp-server:latest ."
+
+[tasks.docker-run]
+description = "Run production container"
+run = "docker run --rm -p 8000:8000 hello-mcp-server:latest"
+
+# =========================================
+# Dependencies Management
+# =========================================
+
+[tasks.lock]
+description = "Generate/update lock file"
+run = "uv lock"
+
+[tasks.lock-upgrade]
+description = "Upgrade all dependencies to latest compatible versions"
+run = "uv lock --upgrade"
